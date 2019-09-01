@@ -7,7 +7,7 @@
 
 // for convenience
 using nlohmann::json;
-using std::string;
+using std::string;  
 using std::vector;
 
 // Checks if the SocketIO event has JSON data.
@@ -30,7 +30,7 @@ int main() {
 
   // Set up parameters here
   double delta_t = 0.1;  // Time elapsed between measurements [sec]
-  double sensor_range = 50;  // Sensor range [m]
+  double sensor_range = 50.0;  // Sensor range [m]
 
   // GPS measurement uncertainty [x [m], y [m], theta [rad]]
   double sigma_pos [3] = {0.3, 0.3, 0.01};
@@ -70,6 +70,7 @@ int main() {
             double sense_theta = std::stod(j[1]["sense_theta"].get<string>());
 
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
+            
           } else {
             // Predict the vehicle's next state from previous 
             //   (noiseless control) data.
@@ -100,16 +101,19 @@ int main() {
           std::istream_iterator<float>(),
           std::back_inserter(y_sense));
 
-          for (int i = 0; i < x_sense.size(); ++i) {
-            LandmarkObs obs;
+          for (unsigned int i = 0; i < x_sense.size(); ++i) {
+            LandmarkObs obs;  
             obs.x = x_sense[i];
             obs.y = y_sense[i];
             noisy_observations.push_back(obs);
           }
+          std::cout<<"number of observations : "<<noisy_observations.size()<<std::endl;
 
           // Update the weights and resample
           pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
+          //std::cout<<"Weights Updated : "<<std::endl;
           pf.resample();
+          //std::cout<<"particles resampled!"<<std::endl;
 
           // Calculate and output the average weighted error of the particle 
           //   filter over all time steps so far.
